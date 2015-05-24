@@ -1,2 +1,6 @@
 default:
 	python setup.py build_ext --inplace
+
+clean:
+	@rm -rf build *.so *.o
+	@rm -rf ajtest.c

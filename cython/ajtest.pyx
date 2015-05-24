@@ -1,5 +1,8 @@
 # use the python malloc/free to have the memory attributed to python.
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
+import numpy as np
+import scipy.sparse as sp
+cimport numpy as np
 
 
 cdef extern from "../include/glbopts.h":
@@ -19,6 +22,8 @@ cdef extern from "../include/linsys.h":
 cdef extern from "../include/scs.h":
     ctypedef double scs_float
     ctypedef int scs_int
+
+    scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info)
 
     struct SCS_SETTINGS:
         scs_int normalize
@@ -89,6 +94,8 @@ cdef extern from "../include/scs.h":
     struct SCS_WORK:
         pass
 
+    char * scs_version()
+
 
 cdef extern from "../linsys/amatrix.h":
     struct A_DATA_MATRIX:
@@ -97,6 +104,7 @@ cdef extern from "../linsys/amatrix.h":
         scs_int * i    # A row index, size: NNZ A 
         scs_int * p    # A column pointer, size: n+1 
         scs_int m, n   # m rows, n cols
+
 
 
 cdef extern from "../include/cones.h":
@@ -139,35 +147,71 @@ cdef extern from "../include/cones.h":
 #    def __dealloc__(self):
 #        PyMem_Free(self._ptr)
 
-cpdef mytest():
-    cdef Settings a
-    a.normalize = 1
-    a.scale = 5
-    a.rho_x = 1e-3
-    a.max_iters = 2500
-    a.eps = 1e-3
-    a.alpha = 1.8
-    a.cg_rate = 2
-    a.verbose = 1
-    a.warm_start = 0
-
-    print type(a)
-    print a
-
-    b = {'alpha': 1.8,
-    'cg_rate': 2.0,
-    'eps': 0.001,
-    'max_iters': 2500,
-    'normalize': 1,
-    'rho_x': 0.001,
-    'scale': 5.0,
-    'verbose': 1,
-    'warm_start': 0}
 
 
-    cdef Settings b_c = b
-    b_c.scale = 0
+stg_default = dict(normalize = 1,
+                   scale = 5,
+                   rho_x = 1e-3,
+                   max_iters = 2500,
+                   eps = 1e-3,
+                   alpha = 1.8,
+                   cg_rate = 2,
+                   verbose = 1,
+                   warm_start = 0)
 
-    print type(b_c)
-    print b_c
+
+def mytest2():
+    c = scs_version()
+    print 'Our version of scs is:', c
+
+    ij = np.array([[0,1,2,3],[0,1,2,3]])
+    A = sp.csc_matrix(([-1.,-1.,1.,1.], ij), (4,4))
+    
+    c = np.array([1.,1.,-1,-1])
+    m,n = A.shape
+
+    # a copy of the cA data structure is returned
+    cdef AMatrix cA = make_amatrix(A)
+    cdef Settings stgs = stg_default
+
+
+    cdef np.ndarray[scs_float] npb = np.array([11.,0.,1,1])
+    cdef scs_float * b = [1,2.0,3,4]
+    b = <scs_float*>npb.data
+
+    cdef Data data = Data(m, n, &cA, b, <scs_float*>c.data, &stgs)
+
+    cdef Cone cone = Cone(f=0,l=4,q=NULL,qsize=0,s=NULL,ssize=0,ep=0,ed=0,psize=0,p=NULL)
+
+    cdef Info info # doesn't need to be initialized
+
+    print 'scs_float: ', sizeof(scs_float)
+
+    x = np.array(n)
+    y = np.array(m)
+    s = np.array(m)
+    cdef Sol sol = make_sol(x,y,s)
+
+    cdef scs_int result = scs(&data, &cone, &sol, &info)
+
+    print result
+
+
+cdef Sol make_sol(x,y,s):
+    cdef Sol sol = Sol(<scs_float*>x.data, <scs_float*>y.data, <scs_float*>s.data)
+    return sol
+
+cdef AMatrix make_amatrix(A):
+    # Amatrix is not really big, so there's no need to dynamically allocate it.
+
+    # convert to sparse if not
+    m, n = A.shape
+
+    # difference with C/python? don't need to make this dynamically declared?
+    # maybe fill a local array and then memcopy to dynamically allocated array
+    cdef AMatrix cA = AMatrix(<scs_float*>A.data.data, <scs_int*>A.indices.data, <scs_int*>A.indptr.data, m, n)
+    return cA
+
+
+
 

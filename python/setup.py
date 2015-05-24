@@ -5,6 +5,8 @@ from glob import glob
 from platform import system
 from numpy import get_include
 from numpy.distutils.system_info import get_info, BlasNotFoundError 
+from Cython.Build import cythonize
+import sys
 
 def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir): 
     libraries = []
@@ -57,6 +59,16 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
                         extra_link_args=extra_link_args,
                         extra_compile_args=extra_compile_args
                         )
+    ajtest = Extension(
+                        name='ajtest',
+                        sources=sources + glob(rootDir + 'linsys/direct/*.c') + glob(rootDir + 'linsys/direct/external/*.c')+['../cython/ajtest.pyx'],
+                        define_macros=define_macros,
+                        include_dirs=include_dirs + [rootDir + 'linsys/direct/', rootDir + 'linsys/direct/external/'],
+                        library_dirs=library_dirs,
+                        libraries=libraries,
+                        extra_link_args=extra_link_args,
+                        extra_compile_args=extra_compile_args
+                        )
     setup(name='scs',
             version='1.1.0',
             author = 'Brendan O\'Donoghue',
@@ -64,7 +76,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
             url = 'http://github.com/cvxgrp/scs',
             description='scs: splittling cone solver',
             py_modules=['scs'],
-            ext_modules=[_scs_direct, _scs_indirect],
+            ext_modules=cythonize([_scs_direct, _scs_indirect, ajtest]),
             requires=["numpy (>= 1.7)","scipy (>= 0.13.2)"],
             license = "GPLv3",
             long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs) second-order cone programs (SOCPs), semidefinite programs (SDPs), and exponential cone programs (ECPs). See http://github.com/cvxgrp/scs for more details."
