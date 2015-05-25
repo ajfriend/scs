@@ -24,6 +24,8 @@ cdef extern from "../include/scs.h":
     ctypedef int scs_int
 
     scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info)
+    Work * scs_init(const Data * d, const Cone * k, Info * info)
+    scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * info)
 
     struct SCS_SETTINGS:
         scs_int normalize
@@ -37,17 +39,18 @@ cdef extern from "../include/scs.h":
         scs_int verbose
         scs_int warm_start
 
-    struct residuals:
-        scs_int lastIter
-        scs_float resDual
-        scs_float resPri
-        scs_float resInfeas
-        scs_float resUnbdd
-        scs_float relGap
-        scs_float cTx_by_tau
-        scs_float bTy_by_tau
-        scs_float tau
-        scs_float kap
+    # is this necessary?
+    #struct residuals:
+    #    scs_int lastIter
+    #    scs_float resDual
+    #    scs_float resPri
+    #    scs_float resInfeas
+    #    scs_float resUnbdd
+    #    scs_float relGap
+    #    scs_float cTx_by_tau
+    #    scs_float bTy_by_tau
+    #    scs_float tau
+    #    scs_float kap
 
 
     struct SCS_PROBLEM_DATA:
@@ -159,27 +162,27 @@ stg_default = dict(normalize = 1,
                    verbose = 1,
                    warm_start = 0)
 
-
 def mytest2():
-    c = scs_version()
-    print 'Our version of scs is:', c
+    ver = scs_version()
+    print 'Our version of scs is:', ver
 
     ij = np.array([[0,1,2,3],[0,1,2,3]])
     A = sp.csc_matrix(([-1.,-1.,1.,1.], ij), (4,4))
-    
-    c = np.array([1.,1.,-1,-1])
+
+    A.indices = A.indices.astype(np.int64)
+    A.indptr = A.indptr.astype(np.int64)
+
+    print 'A type:', A.indices.dtype
+
+    cdef np.ndarray[double] b = np.array([0.,0.,1,1])
+    cdef np.ndarray[double] c = np.array([1.,1.,-1,-1])
     m,n = A.shape
 
     # a copy of the cA data structure is returned
     cdef AMatrix cA = make_amatrix(A)
     cdef Settings stgs = stg_default
 
-
-    cdef np.ndarray[scs_float] npb = np.array([11.,0.,1,1])
-    cdef scs_float * b = [1,2.0,3,4]
-    b = <scs_float*>npb.data
-
-    cdef Data data = Data(m, n, &cA, b, <scs_float*>c.data, &stgs)
+    cdef Data data = Data(m, n, &cA, <scs_float*>b.data, <scs_float*>c.data, &stgs)
 
     cdef Cone cone = Cone(f=0,l=4,q=NULL,qsize=0,s=NULL,ssize=0,ep=0,ed=0,psize=0,p=NULL)
 
@@ -187,18 +190,25 @@ def mytest2():
 
     print 'scs_float: ', sizeof(scs_float)
 
-    x = np.array(n)
-    y = np.array(m)
-    s = np.array(m)
-    cdef Sol sol = make_sol(x,y,s)
+    cdef np.ndarray[scs_float] x = np.zeros(n)
+    cdef np.ndarray[scs_float] y = np.zeros(m)
+    cdef np.ndarray[scs_float] s = np.zeros(m)
+    cdef Sol sol = make_sol(x, y, s)
 
     cdef scs_int result = scs(&data, &cone, &sol, &info)
+    #work = scs_init(&data, &cone, &info)  
+    #result =  scs_solve(work, &data, &cone, &sol, &info)
 
-    print result
+    for i in range(4):
+        print sol.x[i]
 
+    return x, info, stgs
 
-cdef Sol make_sol(x,y,s):
+# this first version messes up everything, for some reason
+#cdef Sol make_sol(x, y, s):
+cdef Sol make_sol(np.ndarray[scs_float] x, np.ndarray[scs_float] y, np.ndarray[scs_float] s):
     cdef Sol sol = Sol(<scs_float*>x.data, <scs_float*>y.data, <scs_float*>s.data)
+    #cdef Sol sol = Sol(NULL, NULL, NULL)
     return sol
 
 cdef AMatrix make_amatrix(A):
@@ -206,10 +216,15 @@ cdef AMatrix make_amatrix(A):
 
     # convert to sparse if not
     m, n = A.shape
+    
+    cdef np.ndarray[scs_float] data = A.data
+    cdef np.ndarray[scs_int] ind = A.indices
+    cdef np.ndarray[scs_int] indptr = A.indptr
+
 
     # difference with C/python? don't need to make this dynamically declared?
     # maybe fill a local array and then memcopy to dynamically allocated array
-    cdef AMatrix cA = AMatrix(<scs_float*>A.data.data, <scs_int*>A.indices.data, <scs_int*>A.indptr.data, m, n)
+    cdef AMatrix cA = AMatrix(<scs_float*>data.data, <scs_int*>ind.data, <scs_int*>indptr.data, m, n)
     return cA
 
 
