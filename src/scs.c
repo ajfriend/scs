@@ -815,6 +815,7 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
     scs_int status;
 
+    //print_data(d);
 #if ( defined _WIN32 || defined _WIN64 ) && !defined MATLAB_MEX_FILE && !defined PYTHON
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);

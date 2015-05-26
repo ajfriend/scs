@@ -104,34 +104,69 @@ cdef extern from "../include/cones.h":
         scs_float * p # array of power cone params, must be \in [-1, 1],
                        # negative values are interpreted as specifying the dual cone */
 
+#cdef class Workspace:
+#    cdef Work * _work
+#    cdef Settings _settings
+#    cdef Info _info
+#    cdef AMatrix _A
+#    cdef Data _data
+#    cdef Cone _cone
 
-# the cone should work as a dictionary
-# maybe we don't need a class, but just two functions to convert either way
-#class ConePy:
-#    pass
+#    def __cinit__(self, data, **settings):
+
+#        # this is a copy of the dict to the settings struct
+#        self._settings = stg_default.copy().update(settings)
+
+#        A = data['A']
+#        m,n = A.shape
+
+#        # TODO: do we always need this conversion?
+#        # check what scs_int is?
+#        A.indices = A.indices.astype(np.int64)
+#        A.indptr = A.indptr.astype(np.int64)
+
+#        self._A = make_amatrix(A.data, A.indices, A.indptr, m, n)
+
+#        # TODO: double check that this isn't a copy.
+#        cdef np.ndarray[double] b = data['b']
+#        cdef np.ndarray[double] c = data['c']
+
+#        self._data = Data(m, n, &self._A, <scs_float*>b.data, <scs_float*>c.data, &self._settings)
+#        self._cone = make_cone(data['cones'])
+
+#        self._work = scs_init(&self._data, &self._cone, &self._info)
+#        #cdef Work * scs_init(const Data * d, const Cone * k, Info * info)
+
+#        if self._work == NULL: 
+#            raise MemoryError("Memory error in allocating Workspace.")
 
 
-#{f: int, l: int, q: [int], s: [int], ep: int, ed: int, p: [int triples?]}
+
+#def myscs_init(data, **settings):
+#    # data is a dict with keys A,b,c, cones
+#    # info is a dict. the set up function just needs it to write down the setuptime
+#    #cdef Work * scs_init(const Data * d, const Cone * k, Info * info)
+#    workspace = None
+#    return workspace
+#    # work contains a pointer to settings, let the user access
+
+#def myscs_solve(data, workspace=None, sol=None, **settings):
+#    if workspace is None:
+#        workspace = myscs_init(data, **settings)
+#    # sol is a dict of numpy arrays
+#    # if none, make the numpy arras yourself
+
+#    # work already contains a pointer to info, and knows the setup time
+#    # work also has a pointer to (the previously set) settings
+
+#    # work will contain the exit status. (should we convert from int to string?)
+
+#    #warmstart! (needs sol to be provided)
+#    #scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * info)
+
+#    return sol, workspace
 
 
-#class DataPy:
-#    pass
-
-# data is a dict of A, b, C
-
-# settings are passed in as kwargs
-
-#sol = scs(data, cone, [use_indirect=false, verbose=true, normalize=true, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
-
-#def scs(data, cone, use_indirect=False,
-#                    verbose=True,
-#                    eps=1e-3,
-#                    max_iters=2500,
-#                    normalize=True,
-#                    scale=5,
-#                    cg_rate=2,
-#                    alpha=1.8,
-#                    rho_x=1e-3):
 def myscs(data, cone, **settings):
      #only setting missing here is warm start
     _A = data['A']
@@ -242,6 +277,8 @@ cdef Cone make_cone(pycone):
 
     # maybe we should just make sure to allocate and free this memory
     return ccone
+
+
 
 
 
