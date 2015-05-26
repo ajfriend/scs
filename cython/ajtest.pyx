@@ -5,7 +5,7 @@ import scipy.sparse as sp
 cimport numpy as np
 
 
-cdef extern from "../include/glbopts.h":
+cdef extern from "glbopts.h":
     ctypedef SCS_PROBLEM_DATA Data
     ctypedef SCS_SETTINGS Settings
     ctypedef SCS_SOL_VARS Sol
@@ -14,11 +14,11 @@ cdef extern from "../include/glbopts.h":
     ctypedef SCS_CONE Cone
 
 
-cdef extern from "../include/linsys.h":
+cdef extern from "linsys.h":
     ctypedef A_DATA_MATRIX AMatrix
 
 
-cdef extern from "../include/scs.h":
+cdef extern from "scs.h":
     ctypedef double scs_float
     ctypedef int scs_int
 
@@ -79,7 +79,7 @@ cdef extern from "../include/scs.h":
     char * scs_version()
 
 
-cdef extern from "../linsys/amatrix.h":
+cdef extern from "amatrix.h":
     struct A_DATA_MATRIX:
         # A is supplied in column compressed format
         scs_float * x  # A values, size: NNZ A 
@@ -89,7 +89,7 @@ cdef extern from "../linsys/amatrix.h":
 
 
 
-cdef extern from "../include/cones.h":
+cdef extern from "cones.h":
 # NB: rows of data matrix A must be specified in this exact order
     struct SCS_CONE:
         scs_int f # number of linear equality constraints
