@@ -14,7 +14,7 @@ cdef extern from "glbopts.h":
     ctypedef SCS_CONE Cone
 
 
-cdef extern from "linsys.h":
+cdef extern from "linSys.h":
     ctypedef A_DATA_MATRIX AMatrix
 
 
