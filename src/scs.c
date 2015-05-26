@@ -1,6 +1,5 @@
 #include "scs.h"
 #include "normalize.h"
-//#include "amatrix.h"
 
 #ifndef EXTRAVERBOSE
 /* if verbose print summary output every this num iterations */
@@ -811,37 +810,11 @@ Work * scs_init(const Data * d, const Cone * k, Info * info) {
 	return w;
 }
 
-// void print_data(const Data * d){
-//     scs_printf("inside print_data!\n");
-//     scs_int m = d->m;
-//     scs_int n = d->n;
-//     scs_printf("m, n is %d, %d\n",m,n);
-//     scs_printf("b is: \n");
-//     for(int i = 0;i<m;i++){
-//         scs_printf("%f\n",d->b[i]);
-//     }
-
-//     scs_printf("A.data is:\n");
-//     for(int i = 0;i<4;i++){
-//         scs_printf("%f\n",d->A->x[i]);
-//     }
-
-//     scs_printf("A.i is:\n");
-//     for(int i = 0;i<4;i++){
-//         scs_printf("%d\n",d->A->i[i]);
-//     }
-
-//     scs_printf("A.p is:\n");
-//     for(int i = 0;i<4;i++){
-//         scs_printf("%d\n",d->A->p[i]);
-//     }
-// }
 
 /* this just calls scs_init, scs_solve, and scs_finish */
 scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
     scs_int status;
 
-    //print_data(d);
 #if ( defined _WIN32 || defined _WIN64 ) && !defined MATLAB_MEX_FILE && !defined PYTHON
 	/* sets width of exponent for floating point numbers to 2 instead of 3 */
 	unsigned int old_output_format = _set_output_format(_TWO_DIGIT_EXPONENT);

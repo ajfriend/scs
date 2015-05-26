@@ -39,19 +39,6 @@ cdef extern from "../include/scs.h":
         scs_int verbose
         scs_int warm_start
 
-    # is this necessary?
-    #struct residuals:
-    #    scs_int lastIter
-    #    scs_float resDual
-    #    scs_float resPri
-    #    scs_float resInfeas
-    #    scs_float resUnbdd
-    #    scs_float relGap
-    #    scs_float cTx_by_tau
-    #    scs_float bTy_by_tau
-    #    scs_float tau
-    #    scs_float kap
-
 
     struct SCS_PROBLEM_DATA:
         # these cannot change for multiple runs for the same call to scs_init
@@ -126,41 +113,93 @@ cdef extern from "../include/cones.h":
                        # negative values are interpreted as specifying the dual cone */
 
 
+# the cone should work as a dictionary
+# maybe we don't need a class, but just two functions to convert either way
+#class ConePy:
+#    pass
 
 
-# do i really want to expose a settings object to the user? can this just be a dict to the user and a struct internally?
-# maybe I really do want to expose the settings for the cached stuff?
-#cdef class Settings:
-#    cdef SCS_SETTINGS *_ptr
-#    def __cinit__(self):
-#        self._ptr = <SCS_SETTINGS*>PyMem_Malloc(sizeof(SCS_SETTINGS))
-#        if not self._ptr:
-#            raise MemoryError()
+#{f: int, l: int, q: [int], s: [int], ep: int, ed: int, p: [int triples?]}
 
-#        self._ptr.normalize = 1
-#        self._ptr.scale = 5
-#        self._ptr.rho_x = 1e-3
-#        self._ptr.max_iters = 2500
-#        self._ptr.eps = 1e-3
-#        self._ptr.alpha = 1.8
-#        self._ptr.cg_rate = 2
-#        self._ptr.verbose = 1
-#        self._ptr.warm_start = 0
 
-#    def __dealloc__(self):
-#        PyMem_Free(self._ptr)
+#class DataPy:
+#    pass
+
+# data is a dict of A, b, C
+
+# settings are passed in as kwargs
+
+#sol = scs(data, cone, [use_indirect=false, verbose=true, normalize=true, max_iters=2500, scale=5, eps=1e-3, cg_rate=2, alpha=1.8, rho_x=1e-3])
+
+#def scs(data, cone, use_indirect=False,
+#                    verbose=True,
+#                    eps=1e-3,
+#                    max_iters=2500,
+#                    normalize=True,
+#                    scale=5,
+#                    cg_rate=2,
+#                    alpha=1.8,
+#                    rho_x=1e-3):
+def myscs(data, cone, **settings):
+     #only setting missing here is warm start
+    _A = data['A']
+    m,n = _A.shape
+
+    # TODO: do we always need this conversion?
+    # check what scs_int is?
+    _A.indices = _A.indices.astype(np.int64)
+    _A.indptr = _A.indptr.astype(np.int64)
+
+    cdef AMatrix A = make_amatrix(_A.data, _A.indices, _A.indptr, m, n)
+
+    stgs = stg_default.copy()
+    stgs.update(settings)
+
+    cdef Settings csettings = stgs
+
+    cdef np.ndarray[double] b = data['b']
+    cdef np.ndarray[double] c = data['c']
+
+    cdef Data cdata = Data(m, n, &A, <scs_float*>b.data, <scs_float*>c.data, &csettings)
+
+    cdef Info info # doesn't need to be initialized
+
+    cdef np.ndarray[scs_float] x = np.zeros(n)
+    cdef np.ndarray[scs_float] y = np.zeros(m)
+    cdef np.ndarray[scs_float] s = np.zeros(m)
+    cdef Sol sol = make_sol(x, y, s)
+
+    cdef Cone ccone = make_cone(cone)
+
+    cdef scs_int result = scs(&cdata, &ccone, &sol, &info)
+
+    return {'x':x, 'y':y, 's':s, 'info':info, 'settings':csettings}
 
 
 
 stg_default = dict(normalize = 1,
-                   scale = 5,
+                   scale = 1,
                    rho_x = 1e-3,
                    max_iters = 2500,
                    eps = 1e-3,
-                   alpha = 1.8,
+                   alpha = 1.5,
                    cg_rate = 2,
                    verbose = 1,
                    warm_start = 0)
+
+def mytest3():
+
+    ij = np.array([[0,1,2,3],[0,1,2,3]])
+    A = sp.csc_matrix(([-1.,-1.,1.,1.], ij), (4,4))
+    cdef np.ndarray[double] b = np.array([0.,0.,1,1])
+    cdef np.ndarray[double] c = np.array([1.,1.,-1,-1])
+    cone = {'l':4}
+
+    data = dict(A=A, b=b, c=c)
+
+    return myscs(data, cone)
+
+
 
 def mytest2():
     ver = scs_version()
@@ -179,7 +218,7 @@ def mytest2():
     m,n = A.shape
 
     # a copy of the cA data structure is returned
-    cdef AMatrix cA = make_amatrix(A)
+    cdef AMatrix cA = make_amatrix(A.data, A.indices, A.indptr, m, n)
     cdef Settings stgs = stg_default
 
     cdef Data data = Data(m, n, &cA, <scs_float*>b.data, <scs_float*>c.data, &stgs)
@@ -211,21 +250,49 @@ cdef Sol make_sol(np.ndarray[scs_float] x, np.ndarray[scs_float] y, np.ndarray[s
     #cdef Sol sol = Sol(NULL, NULL, NULL)
     return sol
 
-cdef AMatrix make_amatrix(A):
+cdef AMatrix make_amatrix(np.ndarray[scs_float] data, np.ndarray[scs_int] ind, np.ndarray[scs_int] indptr, int m, int n):
     # Amatrix is not really big, so there's no need to dynamically allocate it.
-
-    # convert to sparse if not
-    m, n = A.shape
-    
-    cdef np.ndarray[scs_float] data = A.data
-    cdef np.ndarray[scs_int] ind = A.indices
-    cdef np.ndarray[scs_int] indptr = A.indptr
-
-
     # difference with C/python? don't need to make this dynamically declared?
     # maybe fill a local array and then memcopy to dynamically allocated array
     cdef AMatrix cA = AMatrix(<scs_float*>data.data, <scs_int*>ind.data, <scs_int*>indptr.data, m, n)
     return cA
+
+cdef Cone make_cone(pycone):
+    # maybe we should be wrapping cone in a python object to manage memory and deallocation
+    cdef np.ndarray[scs_int] q = None
+    cdef np.ndarray[scs_int] s = None
+    cdef np.ndarray[scs_float] p = None
+
+    cdef Cone ccone = Cone(f=0,l=0,q=NULL,qsize=0,s=NULL,ssize=0,ep=0,ed=0,psize=0,p=NULL)
+    if 'f' in pycone:
+        ccone.f = pycone['f']
+    if 'l' in pycone:
+        ccone.l = pycone['l']
+    if 'q' in pycone:
+        # todo: careful with the integer types here
+        q = np.array(pycone['q'], dtype=np.int64)
+        ccone.q = <scs_int*>q.data
+        ccone.qsize = len(q)
+    if 's' in pycone:
+        # todo: careful with the integer types here
+        s = np.array(pycone['s'], dtype=np.int64)
+        ccone.s = <scs_int*>s.data
+        ccone.ssize = len(s)
+    if 'ep' in pycone:
+        ccone.ep = pycone['ep']
+    if 'ed' in pycone:
+        ccone.ed = pycone['ed']
+    if 'p' in pycone:
+        # todo: careful with the integer types here
+        p = np.array(pycone['p'], dtype=np.float64)
+        ccone.p = <scs_float*>p.data
+        ccone.psize = len(p)
+
+    # return the allocated numpy arrays so that they don't get garbage collected
+    # TODO!! : worry about the numpy arrays here getting garbage collected
+
+    # maybe we should just make sure to allocate and free this memory
+    return ccone
 
 
 
