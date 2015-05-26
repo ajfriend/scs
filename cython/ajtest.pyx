@@ -10,7 +10,6 @@ cdef extern from "../include/glbopts.h":
     ctypedef SCS_SETTINGS Settings
     ctypedef SCS_SOL_VARS Sol
     ctypedef SCS_INFO Info
-    ctypedef SCS_SCALING Scaling
     ctypedef SCS_WORK Work
     ctypedef SCS_CONE Cone
 
@@ -72,13 +71,6 @@ cdef extern from "../include/scs.h":
         scs_float relGap # relative duality gap */
         scs_float setupTime # time taken for setup phase */
         scs_float solveTime # time taken for solve phase */
-
-
-    # contains normalization variables
-    struct SCS_SCALING:
-        scs_float * D # for normalization
-        scs_float * E # for normalization
-        scs_float meanNormRowA, meanNormColA
 
     # workspace for SCS
     struct SCS_WORK:
@@ -164,9 +156,9 @@ def myscs(data, cone, **settings):
 
     cdef Info info # doesn't need to be initialized
 
-    cdef np.ndarray[scs_float] x = np.zeros(n)
-    cdef np.ndarray[scs_float] y = np.zeros(m)
-    cdef np.ndarray[scs_float] s = np.zeros(m)
+    x = np.zeros(n)
+    y = np.zeros(m)
+    s = np.zeros(m)
     cdef Sol sol = make_sol(x, y, s)
 
     cdef Cone ccone = make_cone(cone)
@@ -199,49 +191,6 @@ def mytest3():
 
     return myscs(data, cone)
 
-
-
-def mytest2():
-    ver = scs_version()
-    print 'Our version of scs is:', ver
-
-    ij = np.array([[0,1,2,3],[0,1,2,3]])
-    A = sp.csc_matrix(([-1.,-1.,1.,1.], ij), (4,4))
-
-    A.indices = A.indices.astype(np.int64)
-    A.indptr = A.indptr.astype(np.int64)
-
-    print 'A type:', A.indices.dtype
-
-    cdef np.ndarray[double] b = np.array([0.,0.,1,1])
-    cdef np.ndarray[double] c = np.array([1.,1.,-1,-1])
-    m,n = A.shape
-
-    # a copy of the cA data structure is returned
-    cdef AMatrix cA = make_amatrix(A.data, A.indices, A.indptr, m, n)
-    cdef Settings stgs = stg_default
-
-    cdef Data data = Data(m, n, &cA, <scs_float*>b.data, <scs_float*>c.data, &stgs)
-
-    cdef Cone cone = Cone(f=0,l=4,q=NULL,qsize=0,s=NULL,ssize=0,ep=0,ed=0,psize=0,p=NULL)
-
-    cdef Info info # doesn't need to be initialized
-
-    print 'scs_float: ', sizeof(scs_float)
-
-    cdef np.ndarray[scs_float] x = np.zeros(n)
-    cdef np.ndarray[scs_float] y = np.zeros(m)
-    cdef np.ndarray[scs_float] s = np.zeros(m)
-    cdef Sol sol = make_sol(x, y, s)
-
-    cdef scs_int result = scs(&data, &cone, &sol, &info)
-    #work = scs_init(&data, &cone, &info)  
-    #result =  scs_solve(work, &data, &cone, &sol, &info)
-
-    for i in range(4):
-        print sol.x[i]
-
-    return x, info, stgs
 
 # this first version messes up everything, for some reason
 #cdef Sol make_sol(x, y, s):
