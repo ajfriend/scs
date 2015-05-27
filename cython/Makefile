@@ -3,4 +3,3 @@ default:
 
 clean:
 	@rm -rf build *.so *.o
-	@rm -rf ajtest.c

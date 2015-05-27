@@ -1,14 +1,10 @@
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
 
-ext = [Extension(name='ajtest',
-                sources=['ajtest.pyx'],
-                library_dirs=['/Users/ajfriend/Dropbox/work/scs/out'],
-                libraries=['scsdir'])
+ext = [Extension(name='cyscs',
+                sources=['cyscs.pyx'],
 ]
 
 setup(
     ext_modules = cythonize(ext)
 )
-
-#scs/out/libscsdir.dylib
