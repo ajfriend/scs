@@ -834,6 +834,18 @@ scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info) {
 	return status;
 }
 
+void test_numeric_type(scs_int i, scs_float f){
+    scs_printf("The int is %i.\nThe float is %f.\n", (int) i, f);
+}
+
+void print_numeric_type(scs_float* f, scs_int n){
+    int i;
+    scs_printf("The array is:\n");
+    for(i=0;i<n;i++){
+        scs_printf("%f, ", f[i]);
+    }
+}
+
 /* TODO: re-integrate this eventually
  *  approximate convergence check:
  *  abs to prevent negative stopping tol */

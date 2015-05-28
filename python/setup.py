@@ -59,9 +59,9 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
                         extra_link_args=extra_link_args,
                         extra_compile_args=extra_compile_args
                         )
-    ajtest = Extension(
-                        name='ajtest',
-                        sources=sources + glob(rootDir + 'linsys/direct/*.c') + glob(rootDir + 'linsys/direct/external/*.c')+['../cython/ajtest.pyx'],
+    cyscs = Extension(
+                        name='cyscs',
+                        sources=sources + glob(rootDir + 'linsys/direct/*.c') + glob(rootDir + 'linsys/direct/external/*.c')+['../cython/cyscs.pyx'],
                         define_macros=define_macros,
                         include_dirs=include_dirs + [rootDir + 'linsys/direct/', rootDir + 'linsys/direct/external/'],
                         library_dirs=library_dirs,
@@ -76,7 +76,7 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
             url = 'http://github.com/cvxgrp/scs',
             description='scs: splittling cone solver',
             py_modules=['scs'],
-            ext_modules=cythonize([_scs_direct, _scs_indirect, ajtest]),
+            ext_modules=cythonize([_scs_direct, _scs_indirect, cyscs]),
             requires=["numpy (>= 1.7)","scipy (>= 0.13.2)"],
             license = "GPLv3",
             long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs) second-order cone programs (SOCPs), semidefinite programs (SDPs), and exponential cone programs (ECPs). See http://github.com/cvxgrp/scs for more details."

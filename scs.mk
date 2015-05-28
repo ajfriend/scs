@@ -43,7 +43,7 @@ ARCHIVE = $(AR) $(ARFLAGS)
 RANLIB = ranlib
 
 ########### OPTIONAL FLAGS ##########
-CFLAGS += -DDLONG # use longs rather than ints
+# CFLAGS += -DDLONG # use longs rather than ints
 # CFLAGS += -DFLOAT # use floats rather than doubles
 # CFLAGS += -DNOVALIDATE # remove data validation step
 # CFLAGS += -DBLASSUFFIX="" # blas suffix no underscore

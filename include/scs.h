@@ -81,6 +81,8 @@ void scs_finish(Work * w);
 /* scs calls scs_init, scs_solve, and scs_finish */
 scs_int scs(const Data * d, const Cone * k, Sol * sol, Info * info);
 const char * scs_version(void);
+void test_numeric_type(scs_int i, scs_float f);
+void print_numeric_type(scs_float* f, scs_int n);
 
 /* the following structs are not exposed to user */
 
