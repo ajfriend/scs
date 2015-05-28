@@ -3,6 +3,11 @@
 
 # QUESTION: why do i get segfaults when compiling on OSX?
 
+# IDEA: scs_solve interface is simple, the cached interface is a little more
+# complicated, with the data input only updating what's necessary.
+
+# maybe I don't even need the c function scs? maybe just do it for error checking?
+
 import numpy as np
 cimport numpy as np
 
@@ -16,33 +21,32 @@ stg_default = dict(normalize = 1,
                    verbose = 1,
                    warm_start = 0)
 
-
-cpdef hello():
-    print "hello"
-    cdef scs_int a = -4
-    cdef scs_float b = 2.2357
-    test_numeric_type(a, b)
-
-cpdef hi(np.ndarray[scs_int] a, np.ndarray[scs_float] b):
-    print "hi"
-    test_numeric_type(a[0], b[0])
-
-cpdef howdy(np.ndarray[scs_float] a, np.ndarray[scs_int] b):
-    print "howdy"
-    print_numeric_type(<scs_float*> a.data, b[0])
-
-
 # QUESTION: why can't i make settings a kwargs: **settings (i get a segfault)
 # QUESTION: why do i get a segfault if i use "def" instead of "cpdef"?
-cpdef myscs_solve(data, workspace=None, sol=None, settings=None):
-    if settings is None:
-        settings = {}
+#cpdef myscs_solve(dict data, Workspace workspace=None, sol=None, settings=None):
 
-    if workspace is None:
-        workspace = Workspace(data, **settings)
+#    cdef scs_int m, n
+#    m, n = data['A'].shape
 
-    # *update* the settings dict
-    workspace.settings = settings
+#    if settings is None:
+#        settings = {}
+
+#    if workspace is None:
+#        workspace = Workspace(data, **settings)
+
+#    # *update* the settings dict
+#    workspace.settings = settings
+
+#    # sol is either none or a dict with x, y, s keys
+#    if sol is None:
+#        sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
+    
+#    cdef Sol _sol = make_sol(sol['x'], sol['y'], sol['s'])
+
+#    cdef scs_int status
+#    #status = scs_solve(Work* w, const Data* d, const Cone* k, Sol* sol, Info* info)
+
+#    return sol, workspace
 
 
     #workspace.set_settings(settings)
@@ -127,18 +131,32 @@ cdef class Workspace:
         if self._work == NULL: 
             raise MemoryError("Memory error in allocating Workspace.")
 
-    def show(self):
-        print "showing data"
-        print self._settings
-        print self._info
-        #print self._data.stgs
-        cdef scs_int m = self._data.m
-        cdef scs_float * b = self._data.b
+    def __dealloc__(self):
+        if self._work != NULL:
+            scs_finish(self._work);
 
-        # QUESTION: why do i get segfaults whenever i try to use memoryviews?
+    # TODO: maybe make data optional. if its got a key, update that data entry.
+    def solve(self, dict data, sol=None, **settings):
+        m, n = self._data.m, self._data.n
 
-        for i in range(m):
-            print b[i]
+        self.settings = settings
+
+        # sol is either none or a dict with x, y, s keys
+        if sol is None:
+            sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
+        
+        cdef Sol _sol = make_sol(sol['x'], sol['y'], sol['s'])
+
+        cdef scs_int status
+
+        # do we really want to use the saved data and cone? should we re-create it?
+        # data and cone might actually be pretty fast
+        # maybe the input data can be only 'b' and 'c', what you want to update.
+        # maybe prep the cone dict so that it has numpy arrays we can manipulate, just like we do in prepping the A matrix
+        # this module would only expect to deal with numpy arrays.
+        status = scs_solve(self._work, &self._data, &self._cone, &_sol, &self._info)
+
+        return status, sol
 
 
 ## this first version messes up everything, for some reason
@@ -155,6 +173,8 @@ cdef AMatrix make_amatrix(np.ndarray[scs_float] data, np.ndarray[scs_int] ind, n
     cdef AMatrix cA = AMatrix(<scs_float*>data.data, <scs_int*>ind.data, <scs_int*>indptr.data, m, n)
     return cA
 
+
+#TODO: should I just wrap Cone with an extension type?
 cdef Cone make_cone(pycone):
     # maybe we should be wrapping cone in a python object to manage memory and deallocation
     cdef np.ndarray[scs_int] q = None

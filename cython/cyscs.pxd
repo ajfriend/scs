@@ -5,7 +5,7 @@ cdef extern from "glbopts.h":
     ctypedef SCS_INFO Info
     ctypedef SCS_WORK Work
     ctypedef SCS_CONE Cone
-    
+
     ctypedef float scs_float
     ctypedef int scs_int
 
@@ -19,9 +19,7 @@ cdef extern from "scs.h":
     scs_int scs(const Data* d, const Cone* k, Sol* sol, Info* info)
     Work * scs_init(const Data* d, const Cone* k, Info* info)
     scs_int scs_solve(Work* w, const Data* d, const Cone* k, Sol* sol, Info* info)
-
-    void test_numeric_type(scs_int i, scs_float f)
-    void print_numeric_type(scs_float* f, scs_int n)
+    void scs_finish(Work * w)
 
     struct SCS_SETTINGS:
         scs_int normalize
