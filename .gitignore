@@ -43,3 +43,6 @@ out
 *.classpath
 *.class
 *.dylib
+cyscs.c
+python/dist/
+scs.egg-info
