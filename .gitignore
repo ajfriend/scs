@@ -46,3 +46,4 @@ out
 cyscs.c
 python/dist/
 scs.egg-info
+*.jar

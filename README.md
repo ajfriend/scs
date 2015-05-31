@@ -4,17 +4,14 @@ SCS
 [![Build Status](https://travis-ci.org/cvxgrp/scs.svg?branch=master)](https://travis-ci.org/cvxgrp/scs)
 [![Build status](https://ci.appveyor.com/api/projects/status/4542u6kom5293qpm)](https://ci.appveyor.com/project/bodono/scs)
 
-SCS = `splitting conic solver`
-
-SCS is a numerical optimization package for solving large-scale convex cone problems, written in C,
-based on our paper [Operator Splitting for Conic Optimization via Homogeneous
-Self-Dual Embedding](http://www.stanford.edu/~boyd/papers/scs.html).
-
-SCS can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
-programs via included interfaces. (Julia interface available
-[here](https://github.com/JuliaOpt/SCS.jl).)
-
-SCS can be called from parser-solvers [CVX](http://cvxr.com/cvx/),
+SCS (`splitting conic solver`) is a numerical optimization package for solving
+large-scale convex cone problems, based on our paper [Operator Splitting for
+Conic Optimization via Homogeneous Self-Dual
+Embedding](http://www.stanford.edu/~boyd/papers/scs.html). It is written in C
+and can be used in other C, C++, Python, Matlab, Julia, Java, and Scala
+programs via included interfaces (Julia interface available
+[here](https://github.com/JuliaOpt/SCS.jl)). It can also be called as a solver from
+convex optimization toolboxes [CVX](http://cvxr.com/cvx/),
 [CVXPY](https://github.com/cvxgrp/cvxpy),
 [Convex.jl](https://github.com/JuliaOpt/Convex.jl), and
 [Yalmip](https://github.com/johanlofberg/YALMIP).
@@ -23,7 +20,7 @@ SCS can be called from parser-solvers [CVX](http://cvxr.com/cvx/),
 SCS numerically solves convex cone programs using the alternating direction
 method of multipliers ([ADMM](http://web.stanford.edu/~boyd/papers/admm_distr_stats.html)).
 It returns solutions to both the primal and dual problems if the problem
-is feasible, or a certificate of infeasibility otherwise. SCS solves
+is feasible, or a certificate of infeasibility otherwise. It solves
 the following primal cone problem:
 
 ```
@@ -313,8 +310,16 @@ The first three are NUMPY arrays containing the relevant solution. The last fiel
 ### Using SCS in Java / Scala
 
 SCS can be called from Java and Scala via the Java Native Interface (JNI).
-To compile the necessary libraries, `cd` into the `java` directory and type
-`make`. To test a random cone program type `make testproblem`.
+Typing `make` in the `java` directory will compile the native libraries into
+`java/bin` and build `scs.jar`. You will need to add these files to your java
+projects to use SCS. To test a random cone program type `make testproblem`.
+
+To use with eclipse follow the above steps, then import `scs.jar` into eclipse and
+link the dynamic libraries (`libscsjdir.*` `libscsjindir.*`):
+
+```
+Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with libraries
+```
 
 To solve a problem create a new instance of `ConeProgram` with constructor
 
@@ -330,22 +335,7 @@ ConeProgram.solve();
 ```
 
 on your instance of `ConeProgram`, which will return an instance of
-`SolutionWithInfo`, containing the solution and information
-about the run.
-
-Usage on MAC:
-
-Using the `make` command on MAC will generate .class and dylib files but to use them in JAVA you need to compile them into a single jar file.
-
-1- Download SCS source </br>
-2- Run make (This will generate dylib and class files). If you get jni.h/jni_w.h error during make. Look for these files and use step 3.</br>
-3- (Optional) Place jni_w.h and jni.h in the same folder and run make.</br>
-4- Run make testprogram </br>
-5- Put all the class files in a new folder named "scs" </br>
-7- Build a jar (https://docs.oracle.com/javase/tutorial/deployment/jar/build.html) </br>
-8- Import the jar in eclipse. </br>
-9- Link the dynamic library (dylib files) -> Project > Properties > Build Path > Open scs.jar > Native Library > Edit > Select the folder with dylib </br>
-
+`Solution`, containing the solution and information about the run.
 
 ### Using SCS in Julia
 See usage instructions [here](https://github.com/JuliaOpt/SCS.jl).
