@@ -19,11 +19,11 @@ ext = defaultdict(list)
 if system() == 'Linux':
     ext['libraries'] += ['rt']
 
-ext['sources'] = ['scsmodule.c'] + glob(rootDir + 'src/*.c') + glob(rootDir + 'linsys/*.c')
-ext['include_dirs'] = [rootDir, rootDir + 'include', numpy.get_include(), rootDir + 'linsys']
-ext['define_macros'] = [('PYTHON', None), ('DLONG', None), ('CTRLC', 1), ('COPYAMATRIX', None)]
+ext['sources'] += ['scsmodule.c'] + glob(rootDir + 'src/*.c') + glob(rootDir + 'linsys/*.c')
+ext['include_dirs'] += [rootDir, rootDir + 'include', numpy.get_include(), rootDir + 'linsys']
+ext['define_macros'] += [('PYTHON', None), ('DLONG', None), ('CTRLC', 1), ('COPYAMATRIX', None)]
 # define_macros += [('EXTRAVERBOSE', 999)] # for debugging
-ext['extra_compile_args'] = ["-O3"]
+ext['extra_compile_args'] += ["-O3"]
 
 blas_info=get_info('blas_opt')
 lapack_info=get_info('lapack_opt')
