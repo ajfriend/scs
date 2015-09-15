@@ -40,17 +40,15 @@ if blas_info or lapack_info:
 
 # deep copy so that the dictionaries do not point to the same list objects
 ext_direct = copy.deepcopy(ext)
-ext_direct['name'] = '_scs_direct'
 ext_direct['sources'] += glob(rootDir + 'linsys/direct/*.c') + glob(rootDir + 'linsys/direct/external/*.c')
 ext_direct['include_dirs'] += [rootDir + 'linsys/direct/', rootDir + 'linsys/direct/external/']
-_scs_direct = Extension(**ext_direct)
+
 
 ext_indirect = copy.deepcopy(ext)
-ext_indirect['name'] = '_scs_indirect'
-ext_indirect['sources'] += [rootDir + 'linsys/indirect/*.c']
+ext_indirect['sources'] += glob(rootDir + 'linsys/indirect/*.c')
 ext_indirect['define_macros'] += [('INDIRECT', None)]
 ext_indirect['include_dirs'] += [rootDir + 'linsys/indirect/']
-_scs_indirect = Extension(**ext_indirect)
+
 
 ext_cyscs = copy.deepcopy(ext_direct)
 ext_cyscs['name'] = 'cyscs'
