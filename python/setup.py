@@ -15,6 +15,8 @@ from collections import defaultdict
 # location of SCS root directory, containing 'src/' etc.
 rootDir = '../'
 
+# TODO: collect local directories. do glob and root dir only at end
+
 ext = defaultdict(list)
 
 if system() == 'Linux':
