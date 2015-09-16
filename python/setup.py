@@ -46,15 +46,15 @@ ext_direct['sources'] += glob(rootDir + 'linsys/direct/*.c') + glob(rootDir + 'l
 ext_direct['include_dirs'] += [rootDir + 'linsys/direct/', rootDir + 'linsys/direct/external/']
 
 
-ext_indirect = copy.deepcopy(ext)
-ext_indirect['sources'] += glob(rootDir + 'linsys/indirect/*.c')
-ext_indirect['define_macros'] += [('INDIRECT', None)]
-ext_indirect['include_dirs'] += [rootDir + 'linsys/indirect/']
+# ext_indirect = copy.deepcopy(ext)
+# ext_indirect['sources'] += glob(rootDir + 'linsys/indirect/*.c')
+# ext_indirect['define_macros'] += [('INDIRECT', None)]
+# ext_indirect['include_dirs'] += [rootDir + 'linsys/indirect/']
 
 
 ext_cyscs = copy.deepcopy(ext_direct)
 ext_cyscs['name'] = 'cyscs'
-ext_cyscs['sources'] += ['cython/cyscs.pyx']
+ext_cyscs['sources'] += ['cyscs.pyx']
 cyscs = Extension(**ext_cyscs)
 
 
