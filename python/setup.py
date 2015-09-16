@@ -11,46 +11,46 @@ import copy
 
 from collections import defaultdict
 
-
-# location of SCS root directory, containing 'src/' etc.
-rootDir = '../'
-
-# TODO: collect local directories. do glob and root dir only at end
-
 ext = defaultdict(list)
 
 if system() == 'Linux':
     ext['libraries'] += ['rt']
 
-ext['sources'] += glob(rootDir + 'src/*.c') + glob(rootDir + 'linsys/*.c')
-ext['include_dirs'] += [rootDir, rootDir + 'include', numpy.get_include(), rootDir + 'linsys']
-ext['define_macros'] += [('PYTHON', None), ('DLONG', None), ('CTRLC', 1), ('COPYAMATRIX', None)]
-# define_macros += [('EXTRAVERBOSE', 999)] # for debugging
+# location of SCS root directory, containing 'src/' etc.
+rootDir = '../'
+
+def glober(names):
+    out = []
+    for name in names:
+        out += glob(rootDir + name)
+    return out
+
+# collect the extension module options common to all versions
+ext['sources'] = glober(['src/*.c', 'linsys/*.c'])
+ext['include_dirs'] = glober(['include', 'linsys']) # note that I'm leaving out the root dir. I don't think we need it
+ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
+                         ('CTRLC', 1),     ('COPYAMATRIX', None)]
 ext['extra_compile_args'] += ["-O3"]
 
-blas_info=get_info('blas_opt')
-lapack_info=get_info('lapack_opt')
 
-if blas_info or lapack_info:
-    ext['define_macros'] += [('LAPACK_LIB_FOUND', None)] + blas_info.pop('define_macros', []) + lapack_info.pop('define_macros', [])
-    ext['include_dirs'] += blas_info.pop('include_dirs', []) + lapack_info.pop('include_dirs', [])
-    ext['library_dirs'] += blas_info.pop('library_dirs', []) + lapack_info.pop('library_dirs', [])
-    ext['libraries'] += blas_info.pop('libraries', []) + lapack_info.pop('libraries', [])
-    ext['extra_link_args'] += blas_info.pop('extra_link_args', []) + lapack_info.pop('extra_link_args', [])
-    ext['extra_compile_args'] += blas_info.pop('extra_compile_args', []) + lapack_info.pop('extra_compile_args', [])
+# add blas/lapack info
+lapack_found = False
+for name in 'blas_opt', 'lapack_opt': #'blas', 'lapack'
+    d = get_info(name)
+    for key in d:
+        lapack_found = True
+        ext[key] += d[key]
 
+if lapack_found:
+    ext['define_macros'] += [('LAPACK_LIB_FOUND', None)]
 
+ext['include_dirs'] += [numpy.get_include()]
+
+# create the extension module options for the direct solver version
 # deep copy so that the dictionaries do not point to the same list objects
 ext_direct = copy.deepcopy(ext)
-ext_direct['sources'] += glob(rootDir + 'linsys/direct/*.c') + glob(rootDir + 'linsys/direct/external/*.c')
-ext_direct['include_dirs'] += [rootDir + 'linsys/direct/', rootDir + 'linsys/direct/external/']
-
-
-# ext_indirect = copy.deepcopy(ext)
-# ext_indirect['sources'] += glob(rootDir + 'linsys/indirect/*.c')
-# ext_indirect['define_macros'] += [('INDIRECT', None)]
-# ext_indirect['include_dirs'] += [rootDir + 'linsys/indirect/']
-
+ext_direct['sources'] += glober(['linsys/direct/*.c', 'linsys/direct/external/*.c'])
+ext_direct['include_dirs'] += glober(['linsys/direct/', 'linsys/direct/external/'])
 
 ext_cyscs = copy.deepcopy(ext_direct)
 ext_cyscs['name'] = 'cyscs'
@@ -67,6 +67,10 @@ setup(name='cyscs',
         ext_modules=cythonize(cyscs),
         install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
         license = "MIT",
-        long_description="Solves convex cone programs via operator splitting. Can solve: linear programs (LPs), second-order cone programs (SOCPs), semidefinite programs (SDPs), exponential cone programs (ECPs), and power cone programs (PCPs), or problems with any combination of those cones. See http://github.com/cvxgrp/scs for more details."
+        long_description=("Solves convex cone programs via operator splitting. "
+        "Can solve: linear programs (LPs), second-order cone programs (SOCPs), "
+        "semidefinite programs (SDPs), exponential cone programs (ECPs), and "
+        "power cone programs (PCPs), or problems with any combination of those "
+        "cones. See http://github.com/cvxgrp/scs for more details.")
         )
 
