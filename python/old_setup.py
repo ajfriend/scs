@@ -57,8 +57,18 @@ def install_scs(USE_64_BIT_BLAS, blas_info, lapack_info, USE_OPENMP, rootDir):
                         extra_link_args=extra_link_args,
                         extra_compile_args=extra_compile_args
                         )
+
+    import os
+    c = os.getcwd()
+    print('working directory: ', c)
+    print('ls: ', os.listdir(c))
+    print('sources: ', sources)
+    print('include dirs: ', include_dirs)
+    print('library_dirs: ', library_dirs)
+    print('libraries: ', libraries)
+
     setup(name='scs',
-            version='1.1.6',
+            version='8.9.10',
             author = 'Brendan O\'Donoghue',
             author_email = 'bodonoghue85@gmail.com',
             url = 'http://github.com/cvxgrp/scs',
