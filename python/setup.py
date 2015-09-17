@@ -1,6 +1,5 @@
 from setuptools import setup, Extension
 from platform import system
-from Cython.Build import cythonize
 import copy
 from collections import defaultdict
 from helper import glober, add_blas_lapack_info
@@ -31,8 +30,8 @@ if USE_64_BIT_BLAS:
 rootDir = '../'
 
 # collect the extension module options common to all versions
-ext['sources'] = glober(rootDir, ['src/*.c', 'linsys/*.c'])
-ext['include_dirs'] = glober(rootDir, ['include', 'linsys'])
+ext['sources'] += glober(rootDir, ['src/*.c', 'linsys/*.c'])
+ext['include_dirs'] += glober(rootDir, ['', 'include', 'linsys'])
 ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
                          ('CTRLC', 1),     ('COPYAMATRIX', None)]
 ext['extra_compile_args'] += ["-O3"]
@@ -42,28 +41,34 @@ ext['extra_compile_args'] += ["-O3"]
 add_blas_lapack_info(ext)
 ext['include_dirs'] += [numpy.get_include()]
 
+# TODO: remove for cython version
+ext['sources'] += ['scsmodule.c']
+
 # create the extension module options for the direct solver version
 # deep copy so that the dictionaries do not point to the same list objects
 ext_direct = copy.deepcopy(ext)
+ext_direct['name'] = '_scs_direct'
 ext_direct['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
 ext_direct['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
 
-ext_cyscs = copy.deepcopy(ext_direct)
-ext_cyscs['name'] = 'cyscs'
-ext_cyscs['sources'] += ['cyscs.pyx']
-cyscs = Extension(**ext_cyscs)
+ext_indirect = copy.deepcopy(ext)
+ext_indirect['name'] = '_scs_indirect'
+ext_indirect['sources'] += glober(rootDir, ['linsys/indirect/*.c'])
+ext_indirect['include_dirs'] += glober(rootDir, ['linsys/indirect/'])
+ext_indirect['define_macros'] += [('INDIRECT', None)]
+
+_scs_direct = Extension(**ext_direct)
+_scs_indirect = Extension(**ext_indirect)
 
 
-# for a while, build both original SCS and cython versions
-
-
-setup(name='cyscs',
+setup(name='scs',
         version='9.9.9',
         author = 'Brendan O\'Donoghue',
         author_email = 'bodonoghue85@gmail.com',
         url = 'http://github.com/cvxgrp/scs',
         description='scs: splitting conic solver',
-        ext_modules=cythonize(cyscs),
+        py_modules=['scs'],
+        ext_modules=[_scs_direct, _scs_indirect],
         install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
         license = "MIT",
         long_description=("Solves convex cone programs via operator splitting. "
