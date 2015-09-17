@@ -48,7 +48,7 @@ add_blas_lapack_info(ext)
 ext['include_dirs'] += [numpy.get_include()]
 
 # TODO: remove for cython version
-ext['sources'] += ['scsmodule.c']
+# ext['sources'] += ['scsmodule.c']
 
 # create the extension module arguments for the direct solver version
 # deep copy so that the dictionaries do not point to the same list objects
@@ -61,7 +61,6 @@ ext_direct['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/
 ext_cyscs = copy.deepcopy(ext_direct)
 ext_cyscs['name'] = 'cyscs'
 ext_cyscs['sources'] += ['cyscs.pyx']
-ext_indirect['include_dirs'] += glober(rootDir, ['linsys/indirect/'])
 cyscs = Extension(**ext_cyscs)
 
 
@@ -74,7 +73,6 @@ setup(name='cyscs',
         author_email = 'bodonoghue85@gmail.com',
         url = 'http://github.com/cvxgrp/scs',
         description='scs: splitting conic solver',
-        py_modules=['scs'],
         ext_modules=cythonize(cyscs),
         install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
         license = "MIT",
