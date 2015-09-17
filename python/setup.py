@@ -1,15 +1,11 @@
 from __future__ import print_function
 import os
 from setuptools import setup, Extension
-from glob import glob
 from platform import system
-import numpy
-from numpy.distutils.system_info import get_info
 from Cython.Build import cythonize
-
 import copy
-
 from collections import defaultdict
+from helper import glober, add_blas_lapack_info
 
 ext = defaultdict(list)
 
@@ -19,38 +15,22 @@ if system() == 'Linux':
 # location of SCS root directory, containing 'src/' etc.
 rootDir = '../'
 
-def glober(names):
-    out = []
-    for name in names:
-        out += glob(rootDir + name)
-    return out
-
 # collect the extension module options common to all versions
-ext['sources'] = glober(['src/*.c', 'linsys/*.c'])
-ext['include_dirs'] = glober(['include', 'linsys']) # note that I'm leaving out the root dir. I don't think we need it
+ext['sources'] = glober(rootDir, ['src/*.c', 'linsys/*.c'])
+ext['include_dirs'] = glober(rootDir, ['include', 'linsys'])
 ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
                          ('CTRLC', 1),     ('COPYAMATRIX', None)]
 ext['extra_compile_args'] += ["-O3"]
 
 
-# add blas/lapack info
-lapack_found = False
-for name in 'blas_opt', 'lapack_opt': #'blas', 'lapack'
-    d = get_info(name)
-    for key in d:
-        lapack_found = True
-        ext[key] += d[key]
-
-if lapack_found:
-    ext['define_macros'] += [('LAPACK_LIB_FOUND', None)]
-
-ext['include_dirs'] += [numpy.get_include()]
+# add the blas and lapack info
+add_blas_lapack_info(ext)
 
 # create the extension module options for the direct solver version
 # deep copy so that the dictionaries do not point to the same list objects
 ext_direct = copy.deepcopy(ext)
-ext_direct['sources'] += glober(['linsys/direct/*.c', 'linsys/direct/external/*.c'])
-ext_direct['include_dirs'] += glober(['linsys/direct/', 'linsys/direct/external/'])
+ext_direct['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
+ext_direct['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
 
 ext_cyscs = copy.deepcopy(ext_direct)
 ext_cyscs['name'] = 'cyscs'
