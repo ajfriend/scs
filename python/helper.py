@@ -5,13 +5,24 @@ from glob import glob
 import os
 
 def glober(root, names):
+    """ For each relative path name in `names`, add the root directory and
+    find files matching the resulting glob pattern.
+    """
     out = []
     for name in names:
         out += glob(root + name)
     return out
 
 def from_system_info(names):
-    # set define_macros, include_dirs, library_dirs, libraries, extra_link_args, extra_compile_args
+    """ Retreive info from `numpy.distutils.system_info.get_info`
+
+    For each name in names, call get_info(name) and add the output
+    to a dictionary containing the arguments.
+
+    Expect a dictionary with keys
+
+    define_macros, include_dirs, library_dirs, libraries, extra_link_args, extra_compile_args
+    """
 
     info = defaultdict(list)
 
@@ -25,6 +36,10 @@ def from_system_info(names):
 
 
 def from_env():
+    """ Try to get blas/lapack info from environment variables.
+
+    Return a dictionary with the appropriate arguments
+    """
     PATHS = 'BLAS_LAPACK_LIB_PATHS'
     LIBS = 'BLAS_LAPACK_LIBS'
 
@@ -38,6 +53,12 @@ def from_env():
     return info
 
 def get_blas_lapack_info():
+    """ Try three methods for getting blas/lapack info.
+
+    If successful, set LAPACK_LIB_FOUND and return dictionary with the arguments
+
+    If not successful, print error message and return empty dictionary
+    """
     info = defaultdict(list)
 
     if not info:
@@ -69,6 +90,10 @@ def get_blas_lapack_info():
     return info
 
 def add_blas_lapack_info(ext):
+    """ Append the output from get_blas_lapack_info() to the given dictionary
+    `ext`.
+
+    """
     tmp = get_blas_lapack_info()
     for key in tmp:
         ext[key] += tmp[key]

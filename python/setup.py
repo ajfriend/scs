@@ -12,6 +12,11 @@ USE_OPENMP = False
 # set to true if linking against blas/lapack libraries that use longs instead of ints for indices:
 USE_64_BIT_BLAS = False
 
+# ext is a dictionary collecting the keyword arguments that will be passed into 
+# the Extension module constructor
+# We first collect the arguments which are the same between the direct and
+# indirection versions of the solver, and later form distinct dictionaries
+# for the two versions
 ext = defaultdict(list)
 
 # ext['define_macros'] += [('EXTRAVERBOSE', 999)] # for debugging
@@ -30,9 +35,9 @@ if USE_64_BIT_BLAS:
 # location of SCS root directory, containing 'src/' etc.
 rootDir = '../'
 
-# collect the extension module options common to all versions
-ext['sources'] = glober(rootDir, ['src/*.c', 'linsys/*.c'])
-ext['include_dirs'] = glober(rootDir, ['include', 'linsys'])
+# collect the extension module options common to both direct and indirect versions
+ext['sources'] += glober(rootDir, ['src/*.c', 'linsys/*.c'])
+ext['include_dirs'] += glober(rootDir, ['', 'include', 'linsys'])
 ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
                          ('CTRLC', 1),     ('COPYAMATRIX', None)]
 ext['extra_compile_args'] += ["-O3"]
@@ -42,15 +47,21 @@ ext['extra_compile_args'] += ["-O3"]
 add_blas_lapack_info(ext)
 ext['include_dirs'] += [numpy.get_include()]
 
-# create the extension module options for the direct solver version
+# TODO: remove for cython version
+ext['sources'] += ['scsmodule.c']
+
+# create the extension module arguments for the direct solver version
 # deep copy so that the dictionaries do not point to the same list objects
 ext_direct = copy.deepcopy(ext)
+ext_direct['name'] = '_scs_direct'
 ext_direct['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
 ext_direct['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
 
+# indirect solver extension module arguments
 ext_cyscs = copy.deepcopy(ext_direct)
 ext_cyscs['name'] = 'cyscs'
 ext_cyscs['sources'] += ['cyscs.pyx']
+ext_indirect['include_dirs'] += glober(rootDir, ['linsys/indirect/'])
 cyscs = Extension(**ext_cyscs)
 
 
@@ -63,6 +74,7 @@ setup(name='cyscs',
         author_email = 'bodonoghue85@gmail.com',
         url = 'http://github.com/cvxgrp/scs',
         description='scs: splitting conic solver',
+        py_modules=['scs'],
         ext_modules=cythonize(cyscs),
         install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
         license = "MIT",
