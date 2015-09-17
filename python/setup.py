@@ -11,6 +11,11 @@ USE_OPENMP = False
 # set to true if linking against blas/lapack libraries that use longs instead of ints for indices:
 USE_64_BIT_BLAS = False
 
+# ext is a dictionary collecting the keyword arguments that will be passed into 
+# the Extension module constructor
+# We first collect the arguments which are the same between the direct and
+# indirection versions of the solver, and later form distinct dictionaries
+# for the two versions
 ext = defaultdict(list)
 
 # ext['define_macros'] += [('EXTRAVERBOSE', 999)] # for debugging
@@ -29,7 +34,7 @@ if USE_64_BIT_BLAS:
 # location of SCS root directory, containing 'src/' etc.
 rootDir = '../'
 
-# collect the extension module options common to all versions
+# collect the extension module options common to both direct and indirect versions
 ext['sources'] += glober(rootDir, ['src/*.c', 'linsys/*.c'])
 ext['include_dirs'] += glober(rootDir, ['', 'include', 'linsys'])
 ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
@@ -44,13 +49,14 @@ ext['include_dirs'] += [numpy.get_include()]
 # TODO: remove for cython version
 ext['sources'] += ['scsmodule.c']
 
-# create the extension module options for the direct solver version
+# create the extension module arguments for the direct solver version
 # deep copy so that the dictionaries do not point to the same list objects
 ext_direct = copy.deepcopy(ext)
 ext_direct['name'] = '_scs_direct'
 ext_direct['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
 ext_direct['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
 
+# indirect solver extension module arguments
 ext_indirect = copy.deepcopy(ext)
 ext_indirect['name'] = '_scs_indirect'
 ext_indirect['sources'] += glober(rootDir, ['linsys/indirect/*.c'])
@@ -59,7 +65,6 @@ ext_indirect['define_macros'] += [('INDIRECT', None)]
 
 _scs_direct = Extension(**ext_direct)
 _scs_indirect = Extension(**ext_indirect)
-
 
 setup(name='scs',
         version='9.9.9',
