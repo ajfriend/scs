@@ -1,16 +1,31 @@
-from __future__ import print_function
-import os
 from setuptools import setup, Extension
 from platform import system
 from Cython.Build import cythonize
 import copy
 from collections import defaultdict
 from helper import glober, add_blas_lapack_info
+import numpy
+
+# use 'export OMP_NUM_THREADS=16' to control num of threads (in that case, 16)
+USE_OPENMP = False
+
+# set to true if linking against blas/lapack libraries that use longs instead of ints for indices:
+USE_64_BIT_BLAS = False
 
 ext = defaultdict(list)
 
+# ext['define_macros'] += [('EXTRAVERBOSE', 999)] # for debugging
+
 if system() == 'Linux':
     ext['libraries'] += ['rt']
+
+if USE_OPENMP:
+    ext['define_macros'] += [('OPENMP', None)]
+    ext['extra_compile_args'] += ['-fopenmp']
+    ext['extra_link_args'] += ['-lgomp']
+
+if USE_64_BIT_BLAS:
+    ext['define_macros'] += [('BLAS64', None)]
 
 # location of SCS root directory, containing 'src/' etc.
 rootDir = '../'
@@ -25,6 +40,7 @@ ext['extra_compile_args'] += ["-O3"]
 
 # add the blas and lapack info
 add_blas_lapack_info(ext)
+ext['include_dirs'] += [numpy.get_include()]
 
 # create the extension module options for the direct solver version
 # deep copy so that the dictionaries do not point to the same list objects
@@ -36,6 +52,9 @@ ext_cyscs = copy.deepcopy(ext_direct)
 ext_cyscs['name'] = 'cyscs'
 ext_cyscs['sources'] += ['cyscs.pyx']
 cyscs = Extension(**ext_cyscs)
+
+
+# for a while, build both original SCS and cython versions
 
 
 setup(name='cyscs',
