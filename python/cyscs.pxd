@@ -20,6 +20,7 @@ cdef extern from "scs.h":
     Work * scs_init(const Data* d, const Cone* k, Info* info)
     scs_int scs_solve(Work* w, const Data* d, const Cone* k, Sol* sol, Info* info)
     void scs_finish(Work * w)
+    const char * scs_version()
 
     struct SCS_SETTINGS:
         scs_int normalize
