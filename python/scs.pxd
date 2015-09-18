@@ -1,14 +1,13 @@
 cdef extern from "glbopts.h":
     ctypedef float scs_float
     ctypedef int scs_int
+    
     ctypedef SCS_PROBLEM_DATA Data
     ctypedef SCS_SETTINGS Settings
     ctypedef SCS_SOL_VARS Sol
     ctypedef SCS_INFO Info
     ctypedef SCS_WORK Work
     ctypedef SCS_CONE Cone
-
-
 
 
 cdef extern from "linSys.h":

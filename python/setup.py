@@ -59,15 +59,15 @@ ext_direct['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/
 
 # indirect solver extension module arguments
 ext_cyscs = copy.deepcopy(ext_direct)
-ext_cyscs['name'] = 'cyscs'
-ext_cyscs['sources'] += ['cyscs.pyx']
+ext_cyscs['name'] = 'scs'
+ext_cyscs['sources'] += ['scs.pyx']
 cyscs = Extension(**ext_cyscs)
 
 
 # for a while, build both original SCS and cython versions
 
 
-setup(name='cyscs',
+setup(name='scs',
         version='9.9.9',
         author = 'Brendan O\'Donoghue',
         author_email = 'bodonoghue85@gmail.com',
