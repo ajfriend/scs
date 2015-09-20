@@ -1,36 +1,13 @@
 from setuptools import setup, Extension
 from platform import system
 from Cython.Build import cythonize
-import copy
 from collections import defaultdict
-from helper import glober, add_blas_lapack_info
-import numpy
+from helper import glober
 
-# use 'export OMP_NUM_THREADS=16' to control num of threads (in that case, 16)
-USE_OPENMP = False
-
-# set to true if linking against blas/lapack libraries that use longs instead of ints for indices:
-USE_64_BIT_BLAS = False
-
-# ext is a dictionary collecting the keyword arguments that will be passed into 
-# the Extension module constructor
-# We first collect the arguments which are the same between the direct and
-# indirection versions of the solver, and later form distinct dictionaries
-# for the two versions
 ext = defaultdict(list)
-
-# ext['define_macros'] += [('EXTRAVERBOSE', 999)] # for debugging
 
 if system() == 'Linux':
     ext['libraries'] += ['rt']
-
-if USE_OPENMP:
-    ext['define_macros'] += [('OPENMP', None)]
-    ext['extra_compile_args'] += ['-fopenmp']
-    ext['extra_link_args'] += ['-lgomp']
-
-if USE_64_BIT_BLAS:
-    ext['define_macros'] += [('BLAS64', None)]
 
 # location of SCS root directory, containing 'src/' etc.
 rootDir = '../'
@@ -42,29 +19,14 @@ ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
                          ('CTRLC', 1),     ('COPYAMATRIX', None)]
 ext['extra_compile_args'] += ["-O3"]
 
+# files for the 'direct' version
+ext['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
+ext['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
 
-# add the blas and lapack info
-add_blas_lapack_info(ext)
-ext['include_dirs'] += [numpy.get_include()]
-
-# TODO: remove for cython version
-# ext['sources'] += ['scsmodule.c']
-
-# create the extension module arguments for the direct solver version
-# deep copy so that the dictionaries do not point to the same list objects
-ext_direct = copy.deepcopy(ext)
-ext_direct['name'] = '_scs_direct'
-ext_direct['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
-ext_direct['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
-
-# indirect solver extension module arguments
-ext_cyscs = copy.deepcopy(ext_direct)
-ext_cyscs['name'] = 'scs'
-ext_cyscs['sources'] += ['scs.pyx']
-cyscs = Extension(**ext_cyscs)
-
-
-# for a while, build both original SCS and cython versions
+# add cython stuff
+ext['name'] = 'scs'
+ext['sources'] += ['scs.pyx']
+cyscs = Extension(**ext)
 
 
 setup(name='scs',
