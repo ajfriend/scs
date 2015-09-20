@@ -30,47 +30,54 @@ stg_default = dict(normalize = 1,
                    verbose = 1,
                    warm_start = 0)
 
+def scs(data, cone, **settings):
+    """ This should follow the same API as the current SCS python interface.
+    """
+    print "Implement me!"
+
+
 # QUESTION: why can't i make settings a kwargs: **settings (i get a segfault)
 # QUESTION: why do i get a segfault if i use "def" instead of "cpdef"?
-#cpdef myscs_solve(dict data, Workspace workspace=None, sol=None, settings=None):
+cpdef myscs_solve(dict data, Workspace workspace=None, sol=None, settings=None):
 
-#    cdef scs_int m, n
-#    m, n = data['A'].shape
+    cdef scs_int m, n
+    m, n = data['A'].shape
 
-#    if settings is None:
-#        settings = {}
+    if settings is None:
+        settings = {}
 
-#    if workspace is None:
-#        workspace = Workspace(data, **settings)
+    if workspace is None:
+        workspace = Workspace(data, **settings)
 
-#    # *update* the settings dict
-#    workspace.settings = settings
+    # *update* the settings dict
+    workspace.settings = settings
 
-#    # sol is either none or a dict with x, y, s keys
-#    if sol is None:
-#        sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
+    # sol is either none or a dict with x, y, s keys
+    if sol is None:
+        raise Exception('sol needs to contain vectors to write the solution')
+        #sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
     
-#    cdef Sol _sol = make_sol(sol['x'], sol['y'], sol['s'])
+    cdef Sol _sol = make_sol(sol['x'], sol['y'], sol['s'])
 
-#    cdef scs_int status
-#    #status = scs_solve(Work* w, const Data* d, const Cone* k, Sol* sol, Info* info)
+    cdef scs_int status
+    #status = scs_solve(Work* w, const Data* d, const Cone* k, Sol* sol, Info* info)
 
-#    return sol, workspace
+    return sol, workspace
 
 
-    #workspace.set_settings(settings)
-#    # sol is a dict of numpy arrays
-#    # if none, make the numpy arras yourself
+    workspace.set_settings(settings)
+    # sol is a dict of numpy arrays
+    # if none, make the numpy arras yourself
 
-#    # work already contains a pointer to info, and knows the setup time
-#    # work also has a pointer to (the previously set) settings
+    # work already contains a pointer to info, and knows the setup time
+    # work also has a pointer to (the previously set) settings
 
-#    # work will contain the exit status. (should we convert from int to string?)
+    # work will contain the exit status. (should we convert from int to string?)
 
-#    #warmstart! (needs sol to be provided)
-#    #scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * info)
+    #warmstart! (needs sol to be provided)
+    #scs_int scs_solve(Work * w, const Data * d, const Cone * k, Sol * sol, Info * info)
 
-#    return sol, workspace
+    return sol, workspace
 
 
 cdef class Workspace:
@@ -183,6 +190,8 @@ cdef AMatrix make_amatrix(scs_float[:] data, scs_int[:] ind, scs_int[:] indptr, 
     cdef AMatrix cA = AMatrix(&data[0], &ind[0], &indptr[0], m, n)
     return cA
 
+
+# todo: memory leak where used
 cdef scs_int* make_carray_int(sizes):
     cdef scs_int n = len(sizes)
     cdef scs_int * q = <scs_int*>PyMem_Malloc(n*sizeof(scs_int))
@@ -196,6 +205,7 @@ cdef scs_int* make_carray_int(sizes):
 
     return q
 
+# todo: memory leak where used!
 cdef scs_float* make_carray_float(sizes):
     cdef scs_int n = len(sizes)
     cdef scs_float * q = <scs_float*>PyMem_Malloc(n*sizeof(scs_float))
@@ -212,6 +222,7 @@ cdef scs_float* make_carray_float(sizes):
 
 
 #TODO: should I just wrap Cone with an extension type?
+# TODO: memory leak here!
 cdef Cone make_cone(dict pycone):
     cdef Cone ccone = Cone(f=0,l=0,q=NULL,qsize=0,s=NULL,ssize=0,ep=0,ed=0,psize=0,p=NULL)
     if 'f' in pycone:
