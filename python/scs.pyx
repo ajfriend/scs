@@ -1,12 +1,5 @@
-
-def foo():
-    print 'hello'
-
-def summer(double[:] mv):
-    cdef double d, ss = 0.0
-    for d in mv:
-        ss += d
-    return ss
+#cimport numpy as cnp
+#import numpy as np # for some reason, the regular numpy import gives me a segfault
 
 def version():
     cdef char* c_string = scs_version()
@@ -22,8 +15,10 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 # maybe I don't even need the c function scs? maybe just do it for error checking?
 
-#import numpy as np # for some reason, the regular numpy import gives me a segfault
-cimport numpy as np
+
+
+#cimport cpython.array
+#import array # also get a segfault witht this
 
 stg_default = dict(normalize = 1,
                    scale = 1,
@@ -157,7 +152,11 @@ cdef class Workspace:
 
         # sol is either none or a dict with x, y, s keys
         if sol is None:
-            sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
+            raise Exception('sol needs to contain vectors to write the solution')
+            #x = array('d', [0]*n)
+            #y = array('d', [0]*m)
+            #s = array('d', [0]*m)
+            #sol = dict(x=x, y=y, s=s)
         
         cdef Sol _sol = make_sol(sol['x'], sol['y'], sol['s'])
 
