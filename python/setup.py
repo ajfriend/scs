@@ -1,27 +1,8 @@
 from setuptools import setup, Extension
-from platform import system
 from Cython.Build import cythonize
 from collections import defaultdict
-from helper import glober
 
 ext = defaultdict(list)
-
-if system() == 'Linux':
-    ext['libraries'] += ['rt']
-
-# location of SCS root directory, containing 'src/' etc.
-rootDir = '../'
-
-# collect the extension module options common to both direct and indirect versions
-ext['sources'] += glober(rootDir, ['src/*.c', 'linsys/*.c'])
-ext['include_dirs'] += glober(rootDir, ['', 'include', 'linsys'])
-ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
-                         ('CTRLC', 1),     ('COPYAMATRIX', None)]
-ext['extra_compile_args'] += ["-O3"]
-
-# files for the 'direct' version
-ext['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
-ext['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
 
 # add cython stuff
 ext['name'] = 'scs'
