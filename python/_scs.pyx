@@ -16,7 +16,6 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 # maybe I don't even need the c function scs? maybe just do it for error checking?
 
 
-
 #cimport cpython.array
 #import array # also get a segfault witht this
 

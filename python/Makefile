@@ -4,7 +4,7 @@ all: reinstall test
 
 clean:
 	-pip uninstall scs
-	$(RM) -rf *.so *.egg-info *.pyc cython/scs.c dist build scs.c
+	$(RM) -rf *.so *.egg-info *.pyc cython/scs.c dist build *scs.c
 
 reinstall: clean
 	pip install -e .

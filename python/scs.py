@@ -1,0 +1,2 @@
+def fooscs():
+    print 'fooscs'
