@@ -2,10 +2,6 @@
 def test_import():
     import scs
 
-def test_foo():
-    import scs
-    scs.fooscs()
-
 def test_cone():
     from _scs import show_cone
     d = dict(f=1, l=20, ep=4, ed=7, q=[3,4,9,10], s=[0,1,4], p=[.1, -.7])

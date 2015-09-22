@@ -1,12 +1,11 @@
-#cimport numpy as cnp
-#import numpy as np # for some reason, the regular numpy import gives me a segfault
+# use the python malloc/free to have the memory attributed to python.
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
 def version():
     cdef char* c_string = scs_version()
     return c_string
 
-# use the python malloc/free to have the memory attributed to python.
-from cpython.mem cimport PyMem_Malloc, PyMem_Free
+
 
 # QUESTION: why do i get segfaults when compiling on OSX?
 
@@ -29,10 +28,7 @@ stg_default = dict(normalize = 1,
                    verbose = 1,
                    warm_start = 0)
 
-def scs(data, cone, **settings):
-    """ This should follow the same API as the current SCS python interface.
-    """
-    print "Implement me!"
+
 
 
 # QUESTION: why can't i make settings a kwargs: **settings (i get a segfault)
