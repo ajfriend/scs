@@ -20,8 +20,9 @@ ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
 ext['extra_compile_args'] += ["-O3"]
 
 # files for the 'direct' version
-ext['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
-ext['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
+ext['sources'] += glober(rootDir, ['linsys/indirect/*.c'])
+ext['define_macros'] += [('INDIRECT', None)]
+ext['include_dirs'] += glober(rootDir, ['linsys/indirect/'])
 
 # add cython stuff
 ext['name'] = 'scs'
