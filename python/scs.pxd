@@ -1,2 +1,3 @@
+# commenting out these two lines also avoids the segfault
 cdef extern from "scs.h":
-    const char * scs_version()
+    ctypedef float dummy_type
