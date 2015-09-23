@@ -12,16 +12,13 @@ if system() == 'Linux':
 # location of SCS root directory, containing 'src/' etc.
 rootDir = '../'
 
-# collect the extension module options common to both direct and indirect versions
-ext['sources'] += glober(rootDir, ['src/*.c', 'linsys/*.c'])
 ext['include_dirs'] += glober(rootDir, ['', 'include', 'linsys'])
 ext['define_macros'] += [('PYTHON', None), ('DLONG', None),
                          ('CTRLC', 1),     ('COPYAMATRIX', None)]
 ext['extra_compile_args'] += ["-O3"]
 
-# files for the 'direct' version
-ext['sources'] += glober(rootDir, ['linsys/direct/*.c', 'linsys/direct/external/*.c'])
-ext['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/external/'])
+ext['libraries'] += ['scsdir']
+ext['library_dirs'] += glober(rootDir, ['out'])
 
 # add cython stuff
 ext['name'] = 'scs'
