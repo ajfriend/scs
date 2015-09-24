@@ -1,4 +1,5 @@
 import numpy as np
+cimport numpy as cnp
 # use the python malloc/free to have the memory attributed to python.
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
@@ -50,8 +51,8 @@ cpdef myscs_solve(dict data, Workspace workspace=None, sol=None, settings=None):
 
     # sol is either none or a dict with x, y, s keys
     if sol is None:
-        raise Exception('sol needs to contain vectors to write the solution')
-        #sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
+        #raise Exception('sol needs to contain vectors to write the solution')
+        sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
     
     cdef Sol _sol = make_sol(sol['x'], sol['y'], sol['s'])
 
