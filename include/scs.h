@@ -11,8 +11,6 @@ extern "C" {
 #include "linAlg.h"
 #include "linSys.h"
 #include "util.h"
-#include "ctrlc.h"
-#include "constants.h"
 
 /* struct containing problem data */
 struct SCS_PROBLEM_DATA {
