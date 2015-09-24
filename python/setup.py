@@ -59,8 +59,8 @@ ext_direct['include_dirs'] += glober(rootDir, ['linsys/direct/', 'linsys/direct/
 
 # indirect solver extension module arguments
 ext_cyscs = copy.deepcopy(ext_direct)
-ext_cyscs['name'] = '_scs'
-ext_cyscs['sources'] += ['_scs.pyx']
+ext_cyscs['name'] = 'scs'
+ext_cyscs['sources'] += ['scs.pyx']
 cyscs = Extension(**ext_cyscs)
 
 
@@ -73,7 +73,6 @@ setup(name='scs',
         author_email = 'bodonoghue85@gmail.com',
         url = 'http://github.com/cvxgrp/scs',
         description='scs: splitting conic solver',
-        py_modules=['scs'],
         ext_modules=cythonize(cyscs),
         install_requires=["numpy >= 1.7","scipy >= 0.13.2"],
         license = "MIT",
