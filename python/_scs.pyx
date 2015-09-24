@@ -1,3 +1,4 @@
+import numpy as np
 # use the python malloc/free to have the memory attributed to python.
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
