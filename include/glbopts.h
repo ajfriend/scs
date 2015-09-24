@@ -1,4 +1,4 @@
-#ifdef NULL
-#undef NULL
-#endif
+//#ifdef NULL
+//#undef NULL
+//#endif
 #define NULL 0
