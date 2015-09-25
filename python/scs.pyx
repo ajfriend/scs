@@ -1,5 +1,5 @@
 import numpy as np
-cimport numpy as cnp
+cimport numpy as cnp # todo: what do i need cimport numpy for?
 # use the python malloc/free to have the memory attributed to python.
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 
