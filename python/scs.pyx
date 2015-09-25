@@ -31,6 +31,78 @@ stg_default = dict(normalize = 1,
                    warm_start = 0)
 
 
+# this is the original SCS API
+def solve(dict data, dict cone, **settings):
+    """ Call the python functions to setup a workspace and solve.
+
+    Should match scs2().
+
+    Optional settings can be set as keyword arguments. Descriptions and default
+    values are given below. Default values should be the same as the dictionary
+    `scs.stg_default`. Unrecognized keyword arguments are ignored.
+
+    Parameters
+    ----------
+    data : dict
+        `dict` with elements 'A', 'b', and 'c', where b and c are `numpy` arrays
+        and A is a `scipy` sparse matrix in CSC format;
+        if they are not of the proper format, SCS will attempt to convert them.
+        TODO: make conversion work!
+    cone : dict
+        `dict` with fields f, l, q, s, ep, ed, and p (all of which are optional)
+        corresponding to the supported cone types.
+        TODO: describe int, and list types for cones
+
+    use_indirect : bool (True)
+    verbose : bool (True)
+    normalize : bool (True)
+        todo: normalize A matrix....
+    max_iters : int (2500)
+    scale : float (1)
+    eps : float (1e-3)
+    cg_rate : float (2)
+    alpha : float (1.5)
+    rho_x : float (1e-3)
+
+    Returns
+    -------
+    sol : dict
+        sol['x'], sol['y'], sol['z'] give the solution
+        sol['info'] is a dictionary with solver information
+    """
+    # todo: unrecognized keys are ignored (or warned?)
+    # todo: check that rho > 0, or 0 < alpha < 2?
+
+    cdef scs_int m, n
+    m, n = data['A'].shape
+
+    workspace = Workspace(data, **settings)
+
+    # todo: weird, seems like we're doing double initialization work with sol here
+    sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
+    cdef Sol _sol = make_sol(sol['x'], sol['y'], sol['s'])
+    
+    cdef scs_int status
+
+    # todo: this is weird, not what you would expect for assignment!
+    workspace.settings = settings
+
+    status, sol = workspace.solve(data, sol)
+    sol['info'] = workspace.info
+
+    return sol
+
+def solve2(dict data, dict cone, **settings):
+    """ Call the C function scs.
+
+    should match scs()
+
+    """
+    pass
+
+
+
+
 
 
 # QUESTION: why can't i make settings a kwargs: **settings (i get a segfault)
