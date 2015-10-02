@@ -8,17 +8,14 @@ def version():
     return c_string
 
 
-
-# QUESTION: why do i get segfaults when compiling on OSX?
-
 # IDEA: scs_solve interface is simple, the cached interface is a little more
 # complicated, with the data input only updating what's necessary.
 
 # maybe I don't even need the c function scs? maybe just do it for error checking?
 
-
-#cimport cpython.array
-#import array # also get a segfault witht this
+# todo: assume 64bit int, and double.
+# todo: do we have to convert CSC to 64 bit int?
+# todo: coppying of data and ownership issues....
 
 stg_default = dict(normalize = 1,
                    scale = 1,
@@ -32,10 +29,10 @@ stg_default = dict(normalize = 1,
 
 
 # this is the original SCS API
-def solve(dict data, dict cone, **settings):
+def solve2(dict data, dict cone, **settings):
     """ Call the python functions to setup a workspace and solve.
 
-    Should match scs2().
+    Should match solve2().
 
     Optional settings can be set as keyword arguments. Descriptions and default
     values are given below. Default values should be the same as the dictionary
@@ -73,6 +70,12 @@ def solve(dict data, dict cone, **settings):
     # todo: unrecognized keys are ignored (or warned?)
     # todo: check that rho > 0, or 0 < alpha < 2?
 
+    print 'baah'
+    print 'sizeof(scs_int)', sizeof(scs_int)
+    print 'sizeof(int)', sizeof(int)
+    a = 4
+    print 'sizeof(a)', sizeof(a)
+
     cdef scs_int m, n
     m, n = data['A'].shape
 
@@ -92,13 +95,42 @@ def solve(dict data, dict cone, **settings):
 
     return sol
 
-def solve2(dict data, dict cone, **settings):
-    """ Call the C function scs.
+def solve(dict data, dict cone, **settings):
+    """ Call the C function scs().
 
-    should match scs()
+    should match solve()
 
     """
-    pass
+    A = data['A']
+    cdef scs_int m, n 
+    m, n = A.shape
+
+    A.indices = A.indices.astype(np.int64)
+    A.indptr = A.indptr.astype(np.int64)
+
+    cdef AMatrix _A = make_amatrix(A.data, A.indices, A.indptr, m, n)
+
+    cdef scs_float[:] b = data['b']
+    cdef scs_float[:] c = data['c']
+
+    stgs = stg_default.copy()
+    stgs.update(settings)
+    cdef Settings _settings = stgs
+
+    cdef Data _data = Data(m, n, &_A, &b[0], &c[0], &_settings)
+
+    cdef Cone _cone = make_cone(cone)
+
+    sol = dict(x=np.zeros(n), y=np.zeros(m), s=np.zeros(m))
+    cdef Sol _sol = make_sol(sol['x'], sol['y'], sol['s'])
+
+    cdef Info _info
+
+    cdef scs_int result = scs(&_data, &_cone, &_sol, &_info)
+
+    sol['info'] = _info
+
+    return sol
 
 
 
